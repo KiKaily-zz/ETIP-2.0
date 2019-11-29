@@ -1,19 +1,27 @@
 /*
-	Hologram by Pixelarity
+	Locus by Pixelarity
 	pixelarity.com | hello@pixelarity.com
 	License: pixelarity.com/license
 */
 
 (function($) {
 
-	var	$window = $(window),
+	var $window = $(window),
 		$body = $('body'),
-		$header = $('#header');
+		settings = {
+
+			// Parallax background effect?
+				parallax: true,
+
+			// Parallax factor (lower = more intense, higher = less intense).
+				parallaxFactor: 5
+
+		};
 
 	// Breakpoints.
 		breakpoints({
-			xlarge:   [ '1281px',  '1680px' ],
-			large:    [ '981px',   '1280px' ],
+			xlarge:   [ '1367px',  '1680px' ],
+			large:    [ '981px',   '1366px' ],
 			medium:   [ '737px',   '980px'  ],
 			small:    [ '481px',   '736px'  ],
 			xsmall:   [ null,      '480px'  ]
@@ -26,32 +34,76 @@
 			}, 100);
 		});
 
-	// Scrolly.
-		$('.scrolly').scrolly({
-			offset: function() { return $header.outerHeight() }
-		});
+	// Nav Panel.
 
-	// Menu.
-		$('#menu')
-			.append('<a href="#menu" class="close"></a>')
-			.appendTo($body)
-			.panel({
-				delay: 500,
-				hideOnClick: true,
-				hideOnSwipe: true,
-				resetScroll: true,
-				resetForms: true,
-				side: 'right'
-			});
+		// Button.
+			$(
+				'<div id="navButton">' +
+					'<a href="#navPanel" class="toggle"></a>' +
+				'</div>'
+			)
+				.appendTo($body);
 
-	// Header.
-		$window.on('resize', function() { $window.trigger('scroll'); });
+		// Panel.
+			$(
+				'<div id="navPanel">' +
+					'<nav>' +
+						$('#nav').navList() +
+					'</nav>' +
+				'</div>'
+			)
+				.appendTo($body)
+				.panel({
+					delay: 500,
+					hideOnClick: true,
+					resetScroll: true,
+					resetForms: true,
+					side: 'top',
+					target: $body,
+					visibleClass: 'navPanel-visible'
+				});
 
-		$body.scrollex({
-			top:		'25vh',
-			mode:		'top',
-			enter:		function() { $header.addClass('alt'); },
-			leave:		function() { $header.removeClass('alt'); }
-		});
+	// Parallax background.
+
+		// Disable parallax on IE (smooth scrolling is jerky), and on mobile platforms (= better performance).
+			if (browser.name == 'ie'
+			||	browser.name == 'edge'
+			||	browser.mobile)
+				settings.parallax = false;
+
+		if (settings.parallax) {
+
+			var $dummy = $(), $bg;
+
+			$window
+				.on('scroll.locus_parallax', function() {
+
+					// Adjust background position.
+					// Note: If you've removed the background overlay image, remove the "top left, " bit.
+						$bg.css('background-position', 'top left, center ' + (-1 * (parseInt($window.scrollTop()) / settings.parallaxFactor)) + 'px');
+
+				})
+				.on('resize.locus_parallax', function() {
+
+					// If we're in a situation where we need to temporarily disable parallax, do so.
+					// Note: If you've removed the background overlay image, remove the "top left, " bit.
+						if (breakpoints.active('<=medium')) {
+
+							$body.css('background-position', 'top left, top center');
+							$bg = $dummy;
+
+						}
+
+					// Otherwise, continue as normal.
+						else
+							$bg = $body;
+
+					// Trigger scroll handler.
+						$window.triggerHandler('scroll.locus_parallax');
+
+				})
+				.trigger('resize.locus_parallax');
+
+		}
 
 })(jQuery);
