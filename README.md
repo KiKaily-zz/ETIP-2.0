@@ -1,2 +1,1 @@
-# KiKaily.github.io
- 
+# ETIP-2.0
